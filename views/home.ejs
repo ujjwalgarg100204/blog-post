@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+<h1>Home</h1>
+<p><%= homeContent %></p>
+<% if (blogs.length >= 1) { %>
+    <h1>Blogs</h1>
+<% } %>
+<div class="container">
+    <div class="blogs">
+        <% blogs.forEach((blog) => { %>
+            <div class="blog">
+                <h2><%= blog.heading %></h2>
+                <p><%= blog.body.substring(0, 100) %>... <a href="/blogs/<%= blog.heading %>">Read More</a></p>
+            </div>
+        <% }); %>
+    </div>
+</div>
+<%- include('partials/footer') %>
