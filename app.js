@@ -2,8 +2,9 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const ejs = require("ejs");
 const _ = require("lodash");
+const mongoose = require("mongoose");
+mongoose.connect("mongodb://127.0.0.1:27017/blogsDB")
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
 const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
@@ -13,45 +14,63 @@ const app = express();
 
 app.set('view engine', 'ejs');
 
-const posts = [];
+const postSchema = new mongoose.Schema({
+    title: String,
+    body: String
+});
+
+const Post = mongoose.model("Post", postSchema);
+
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-    res.render("home", {homeContent: homeStartingContent, blogs: posts});
+
+    Post.find({}, (err, blogs) => {
+        if (!err) {
+            res.render("home", {homeContent: homeStartingContent, blogs: blogs});
+        }
+    });
+
 });
+
 app.get("/about", (req, res) => {
     res.render("about", {aboutHeading: "About", aboutContent: aboutContent});
 });
+
 app.get("/contact", (req, res) => {
     res.render("contact", {contactHeading: "Contact", contactContent: contactContent});
 });
 
 app.get("/compose", (req, res) => {
-    res.render("compose",)
+    res.render("compose");
 });
 
-app.get("/blogs/:blog", (req, res) => {
-    posts.forEach((blog) => {
-        if (_.lowerCase(blog.heading) === _.lowerCase(req.params.blog)) {
-            res.render("blog-template", {title: blog.heading, bodyOfBlog: blog.body});
+app.get("/blogs/:blogID", (req, res) => {
+    const queriedBlog = req.params.blogID;
+
+    Post.findOne({_id: queriedBlog}, (err, foundBlog) => {
+        if (!err) {
+            res.render("blog-template", {title: foundBlog.title, bodyOfBlog: foundBlog.body});
         }
     });
 });
 
 app.post("/compose", (req, res) => {
-    posts.push({
-        heading: req.body.titleOfNewCompose,
+    const newBlog = new Post({
+        title: req.body.titleOfNewCompose,
         body: req.body.bodyOfNewCompose
     });
 
-    res.redirect("/");
+    newBlog.save().then(_ => {
+        res.redirect("/");
+    });
+
 });
 
 
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, function () {
+app.listen(PORT, () => {
     console.log("Server started on port 3000");
 });
