@@ -1,8 +1,6 @@
-//jshint esversion:6
-
 const express = require("express");
 const bodyParser = require("body-parser");
-const _ = require("lodash");
+const ejs = require("ejs");
 const mongoose = require("mongoose");
 mongoose.connect("mongodb://127.0.0.1:27017/blogsDB")
 
